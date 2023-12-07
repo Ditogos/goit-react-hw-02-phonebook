@@ -1,15 +1,21 @@
-import React, { useState } from 'react';
+import React, { Component } from 'react';
 import { nanoid } from 'nanoid';
 import css from './App.module.css';
 import { ContactForm } from './contactForm/contactForm';
 import { Filter } from './filterContactList/filterContactList';
 import ContactList from './contactList/contactList';
 
-export const App = () => {
-  const [contacts, setContacts] = useState([]);
-  const [filter, setFilter] = useState('');
+export class App extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      contacts: [],
+      filter: '',
+    };
+  }
 
-  const addContact = (name, number) => {
+  addContact = (name, number) => {
+    const { contacts } = this.state;
     if (
       contacts.find(
         contact => contact.name.toLowerCase() === name.toLowerCase()
@@ -25,38 +31,42 @@ export const App = () => {
       number,
     };
 
-    setContacts(prevContacts => [contact, ...prevContacts]);
+    this.setState(prevState => ({
+      contacts: [contact, ...prevState.contacts],
+    }));
   };
 
-  const changeFilter = event => {
-    setFilter(event.currentTarget.value);
+  changeFilter = event => {
+    this.setState({ filter: event.currentTarget.value });
   };
 
-  const onDeleteContact = contactId => {
-    setContacts(prevContacts =>
-      prevContacts.filter(contact => contact.id !== contactId)
-    );
+  onDeleteContact = contactId => {
+    this.setState(prevState => ({
+      contacts: prevState.contacts.filter(contact => contact.id !== contactId),
+    }));
   };
 
-  const getFiltredContacts = () => {
+  getFiltredContacts = () => {
+    const { filter, contacts } = this.state;
     const normalizedFilter = filter.toLowerCase();
     return contacts.filter(contact =>
       contact.name.toLowerCase().includes(normalizedFilter)
     );
   };
+  render() {
+    const filtredContacts = this.getFiltredContacts();
 
-  const filtredContacts = getFiltredContacts();
-
-  return (
-    <div className={css.Wrapper}>
-      <h1 className={css.Header}>Phonebook</h1>
-      <ContactForm onSubmit={addContact} />
-      <h2>Contacts</h2>
-      <Filter value={filter} onChange={changeFilter} />
-      <ContactList
-        filtredContacts={filtredContacts}
-        onDeleteContact={onDeleteContact}
-      />
-    </div>
-  );
-};
+    return (
+      <div className={css.Wrapper}>
+        <h1 className={css.Header}>Phonebook</h1>
+        <ContactForm onSubmit={this.addContact} />
+        <h2>Contacts</h2>
+        <Filter value={this.state.filter} onChange={this.changeFilter} />
+        <ContactList
+          filtredContacts={filtredContacts}
+          onDeleteContact={this.onDeleteContact}
+        />
+      </div>
+    );
+  }
+}
